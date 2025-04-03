@@ -9,9 +9,6 @@ This project retrieves Wikipedia content, processes it into smaller text chunks,
 ✅ Answers user questions using Roberta-based QA model.
 
 📂 Project Structure
-bash
-Copy
-Edit
 wikipedia-qa/
 │── app.py                # Main script to run the project
 │── utils.py              # Utility functions (text processing, Wikipedia retrieval)
@@ -19,23 +16,6 @@ wikipedia-qa/
 │── requirements.txt      # Dependencies
 │── README.md             # Project documentation
 
-🚀 Installation
-1️⃣ Clone the Repository
-bash
-Copy
-Edit
-git clone https://github.com/your-username/wikipedia-qa.git
-cd wikipedia-qa
-2️⃣ Install Dependencies
-bash
-Copy
-Edit
-pip install -r requirements.txt
-3️⃣ Run the Project
-bash
-Copy
-Edit
-python app.py
 
 🛠 How It Works
 1️⃣ User enters a Wikipedia topic → Wikipedia content is retrieved.
@@ -46,9 +26,6 @@ python app.py
 6️⃣ QA model extracts the answer → Using Roberta-based SQuAD2 model.
 
 📌 Example Usage
-css
-Copy
-Edit
 Enter a topic to learn about: Artificial Intelligence
 Ask a question about the topic: What is AI?
 🔹 Retrieved Chunks:
@@ -65,19 +42,10 @@ AI is used in various applications like chatbots, robotics, etc.
 
 📦 Dependencies
 The following libraries are required:
-
-Copy
-Edit
 wikipedia-api
 transformers
 sentence-transformers
 faiss-cpu
 numpy
-To install them manually:
-
-bash
-Copy
-Edit
-pip install wikipedia-api transformers sentence-transformers faiss-cpu numpy
 
 
