@@ -1,0 +1,110 @@
+Code : 
+
+def get_wikipedia_content(topic):
+    try:
+        page = wikipedia.page(topic)
+        return page.content
+    except wikipedia.exceptions.PageError:
+        return None
+    except wikipedia.exceptions.DisambiguationError as e:
+        # handle cases where the topic is ambiguous
+        print(f"Ambiguous topic. Please be more specific. Options: {e.options}")
+        return None
+
+# user input
+topic = input("Enter a topic to learn about: ")
+document = get_wikipedia_content(topic)
+
+if not document:
+    print("Could not retrieve information.")
+    exit()
+
+Explanation : The code attempts to fetch a Wikipedia page using the wikipedia.page() function.
+topic is a variable that holds the name of the Wikipedia topic the user wants to look up. wikipedia.page(topic) retrieves the Wikipedia page object corresponding to the topic.
+.content extracts the text content from the page. If successful, the function returns the content of the Wikipedia page.
+wikipedia.exceptions.PageError is raised when the Wikipedia page for the given topic does not exist. If this exception occurs, None is returned to indicate that no page was found.
+wikipedia.exceptions.DisambiguationError occurs when the topic is ambiguous (e.g., searching "Python" might refer to the programming language or the snake).
+The as 'e' part captures the exception object, which contains a list of possible topic options (e.options). The code prints a message to inform the user that the topic is ambiguous and suggests possible options. None is returned instead of page content.
+
+code :
+tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-mpnet-base-v2")
+
+def split_text(text, chunk_size=256, chunk_overlap=20):
+    tokens = tokenizer.tokenize(text)
+    chunks = []
+    start = 0
+    while start < len(tokens):
+        end = min(start + chunk_size, len(tokens))
+        chunks.append(tokenizer.convert_tokens_to_string(tokens[start:end]))
+        if end == len(tokens):
+            break
+        start = end - chunk_overlap
+    return chunks
+  
+chunks = split_text(document)
+print(f"Number of chunks: {len(chunks)}")
+
+Explanation:
+AutoTokenizer is a class from the Hugging Face Transformers library. It helps break text into smaller units called tokens.
+from_pretrained("sentence-transformers/all-mpnet-base-v2") loads a pretrained tokenizer from an existing model called "all-mpnet-base-v2".
+This tokenizer is designed to break text into words and subwords in a way that matches how the mpnet-base-v2 model understands text.
+This function takes text and splits it into smaller pieces (chunks). It has two parameters: chunk_size=256: Each chunk will have a maximum of 256 tokens. chunk_overlap=20: 
+Each new chunk overlaps with the previous one by 20 tokens to preserve context. chunks = []: Creates an empty list to store the chunks.
+start = 0: Keeps track of where the next chunk starts.start + chunk_size: Tries to take 256 tokens. min(start + chunk_size, len(tokens)): Ensures we don’t go beyond the text length.
+tokens[start:end] gets a slice of tokens from start to end. tokenizer.convert_tokens_to_string() converts tokens back into a readable text chunk.If we have processed all tokens, we exit the loop (break).
+Otherwise, we move start back by 20 tokens (chunk_overlap=20). This ensures each chunk has some context from the previous chunk.
+
+  
+code :
+embedding_model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
+embeddings = embedding_model.encode(chunks)
+dimension = embeddings.shape[1]
+index = faiss.IndexFlatL2(dimension)
+index.add(np.array(embeddings))
+
+
+Explanation:
+This loads a pre-trained sentence transformer model called "sentence-transformers/all-mpnet-base-v2".
+This model converts text into numerical vector representations (embeddings).It is particularly good for semantic similarity tasks (finding similar sentences).The encode() function converts text chunks into dense vector representations (embeddings).
+Each chunk of text is transformed into a high-dimensional numerical array.These embeddings capture semantic meaning, allowing us to compare them using mathematical operations.embeddings.shape gives the shape of the embeddings matrix.
+shape[1] gives the number of dimensions for each embedding vector (usually 768 for mpnet-base-v2).This value is needed for FAISS, which indexes vectors of a fixed size.FAISS (Facebook AI Similarity Search) is a fast search library for finding similar embeddings.
+IndexFlatL2(dimension) creates an FAISS index that uses L2 (Euclidean) distance to measure similarity.The lower the L2 distance between two vectors, the more similar they are.This stores all our chunk embeddings inside the FAISS index.
+FAISS allows us to efficiently search for the most relevant chunks when a user asks a question.
+
+code:
+query = input("Ask a question about the topic: ")
+query_embedding = embedding_model.encode([query])
+
+k = 3
+distances, indices = index.search(np.array(query_embedding), k)
+retrieved_chunks = [chunks[i] for i in indices[0]]
+print("Retrieved chunks:")
+for chunk in retrieved_chunks:
+    print("- " + chunk)
+
+
+Explanation:
+The program prompts the user to enter a question about the Wikipedia topic.The user's question is stored in the variable query.The Sentence Transformer model (embedding_model) converts the question into a vector embedding.This embedding represents the semantic meaning of the question.It allows us to compare the question to stored Wikipedia text chunks in vector space.The FAISS index performs a similarity search.
+It finds the top k (3 in this case) most relevant text chunks by comparing the question embedding to stored Wikipedia chunk embeddings.
+L2 (Euclidean) distance is used to measure similarity (lower distance = higher similarity).The indices array contains the indexes of the most relevant chunks.
+This line extracts those chunks from the original Wikipedia text chunks.The program prints the retrieved Wikipedia text chunks.These chunks are contextually related to the question.
+
+code:
+qa_model_name = "deepset/roberta-base-squad2"
+qa_tokenizer = AutoTokenizer.from_pretrained(qa_model_name)
+qa_model = AutoModelForQuestionAnswering.from_pretrained(qa_model_name)
+qa_pipeline = pipeline("question-answering", model=qa_model, tokenizer=qa_tokenizer)
+
+context = " ".join(retrieved_chunks)
+answer = qa_pipeline(question=query, context=context)
+print(f"Answer: {answer['answer']}")
+
+Explanation"
+The variable qa_model_name stores the name of the pretrained QA model:"deepset/roberta-base-squad2"
+This model is based on RoBERTa and trained on SQuAD2.0 (a dataset for answering questions based on context).It helps extract precise answers from a given text.
+AutoTokenizer.from_pretrained(qa_model_name) loads a tokenizer that converts input text into tokens for the model.
+AutoModelForQuestionAnswering.from_pretrained(qa_model_name) loads the actual RoBERTa model for answering questions.
+Why do we need both?The tokenizer breaks down text into smaller parts for the model to understand.The model analyzes tokens and determines the most likely answer.The pipeline function simplifies the question-answering process.
+It combines tokenization, model inference, and answer extraction into a single step.Now, we can directly input a question and context, and the model will extract an answer.
+The retrieved Wikipedia text chunks are joined together into a single text string.This provides context for the QA model to search for answers.The user's question (query) and Wikipedia text (context) are fed into the QA pipeline.The model searches for the most likely answer inside the provided context.
+The output is stored in answer, which contains the extracted answer and confidence scores.The best answer extracted from the text is displayed to the user.
