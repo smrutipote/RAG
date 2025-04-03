@@ -1,4 +1,7 @@
 Wikipedia-Based Question Answering System using RAG
+check out this project deployed on hugging face : https://huggingface.co/spaces/smrup/RAG_using_Wikipedia_based_QA
+
+
 This project retrieves Wikipedia content, processes it into smaller text chunks, and allows users to query information using FAISS-based retrieval and a Question Answering (QA) model.
 
 📌 Features
